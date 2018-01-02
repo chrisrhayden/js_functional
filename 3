@@ -1,0 +1,8 @@
+import Immutable from 'immutable'
+
+
+const decrementHP = (player) => player.set('hp', player.get('hp') - 1)
+
+const isSameTeam = (player1, player2) => {
+  return player1.get('team') === player2.get('team')
+}

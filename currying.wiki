@@ -45,6 +45,8 @@ increment2(2)
 
 }}}
 
+
+Sum random test with closer
 {{{javascript
 const test = (() => { let counter = 0; return () => {return counter += 1}})()
 
@@ -56,6 +58,11 @@ console.log('test >', test())
 }}}
 
 
+This is where the fun begins
+
+With these functions more specific and useful ones will be crated
+this is partial application
+{{{javascript
 /* curry */
 
 const match = curry((what, str) => str.match(what))
@@ -64,6 +71,11 @@ const replace = curry((what, replacement, str) => str.replace(what, replacement)
 
 
 const filter = curry((f, ary) => ary.filter(f))
+
+}}}
+
+Test the functions here
+{{{javascript
 
 const test_obj = {
   match: match(/\s+/g, 'hello world'),
@@ -85,6 +97,10 @@ const test_obj2 = {
 
 console.log(test_obj2)
 
+}}}
+
+Crate more new functions
+{{{javascript
 const findSpaces = filter(hasSpaces)
 
 console.log('findSpaces', findSpaces(['tori_spelling', 'tori amos']))

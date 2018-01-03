@@ -1,0 +1,189 @@
+= Composition =
+- https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch5.html
+
+{{{javascript
+const R = require('ramda')
+const print = console.log
+}}}
+
+== functional-husbandry ==
+=== Intro ===
+
+Composition feels like function husbandry.
+
+Compose will take to functions and return a new function
+with g then f as call bakes and x as a unfulfilled variable.
+
+- https://drboolean.gitbooks.io/mostly-adequate-guide/content/ch5.html
+  #functional-husbandry
+  
+{{{javascript
+
+const compose = (f, g) => {
+    return (x) => f(g(x))
+}
+
+}}}
+
+Two functions to be used together, toUpperCase and exclaim
+The key is that they should yiald the same type, or they would be incompatible
+or maybe not functional programing?
+
+{{{javascript
+
+const toUpperCase = (x) => {
+    return x.toUpperCase()
+}
+
+const exclaim = (x) => {
+    return x + '!'
+}
+
+}}}
+
+
+Now compose toUpperCase and exclaim to form shout
+{{{javascript
+
+const shout = compose(exclaim, toUpperCase)
+// shout = (x) => f(g(x))
+
+print('shout =', shout.toString())
+
+const msg = shout('send in the clowns')
+
+print(msg)
+// SEND IN THE CLOWNS!
+}}}
+
+nesting function calls
+{{{javascript
+const badShout = (x) => exclaim(toUpperCase(x))
+}}}
+
+Something where sequence matters
+
+a bad last function
+{{{javascript
+const head = (x) => {
+    return x[0]
+}
+
+const unReduce = (callback, start, arry) => {
+    return arry.reduce(callback, start)
+}
+
+const reduce = R.curry(unReduce)
+
+const reverse = reduce((acc, x) => {
+    return [x].concat(acc)
+}, [])
+
+const last = compose(head, reverse)
+
+print(last(['jumpkick', 'roundhouse', 'uppercut']))
+// uppercut
+}}}
+
+
+associativity
+
+const associative = compose(f, compose(g, h)) == compose(compose(f, g), h)
+// true
+
+Composition is associative,
+meaning it doesn't matter how you group two of them.
+So, should we choose to uppercase the string, we can write:
+
+{{{javascript
+const Tup = compose(toUpperCase, compose(head, reverse))
+
+const tuP = compose(compose(toUpperCase, head), reverse)
+}}}
+
+Since it doesn't matter how we group our calls to compose,
+the result will be the same. That allows us to write a variadic
+compose and use it as follows:
+
+these wont work with curent compose
+{{{javascript
+/*
+
+const lastUpper = compose(toUpperCase, head, reverse)
+
+const lU_out = lastUpper(['jumpkick', 'roundhouse', 'uppercut'])
+
+print('last upper', lU_out)
+
+const loudLastUpper = compose(exclaim, toUpperCase, head, reverse)
+
+print('old loude lLU', loudLastUpper(['jumpkick', 'roundhouse', 'uppercut']))
+
+ */
+}}}
+
+refacter the last exapels
+
+{{{javascript
+
+// const last = compose(head, reverse) from above
+
+const angry = compose(exclaim, toUpperCase)
+
+const loudLastUpper = compose(angry, last)
+
+
+print('loud last U', loudLastUpper(['jumpkick', 'roundhouse', 'uppercut']))
+}}}
+
+pointfree style means never mentining your data
+
+Currying allows functions to operate on then pass data along.
+Point full functions always need data where no point
+functions don't.
+
+{{{javascript
+// not point free (word)
+const snakeCase = (word) => {
+    return word.toLowerCase().replace(/\s+/ig, '_')
+}
+
+const toLowerCase = (x) => x.toLowerCase()
+
+// point free
+const snakeCaseNP = compose(R.replace(/\s+/ig, '_'), toLowerCase)
+
+print(snakeCaseNP('what you fukin say'))
+}}}
+
+
+more exapels for pointless functions
+
+{{{javascript
+const badInitials = (name) => {
+    return name.split(' ').map(compose(toUpperCase, head))
+}
+
+
+const unJoin = (str, arry) => arry.join(str)
+
+const join = R.curry(unJoin)
+
+const unMap = (callback, arry) => arry.map(callback)
+
+const map = R.curry(unMap)
+
+const unSplit = (sep, str) => str.split(sep)
+
+const split = R.curry(unSplit)
+
+const initials = compose(join('. '), map(
+        compose(toUpperCase, head)
+    ), split(' ')
+)
+
+print(initials('hunter stockton thompson'))
+// 'H. S. T'
+}}}
+
+trace

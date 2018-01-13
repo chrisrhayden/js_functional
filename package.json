@@ -8,6 +8,7 @@
     "test": "tests"
   },
   "dependencies": {
+    "accounting": "^0.4.1",
     "eslint": "^4.14.0",
     "flow-bin": "^0.62.0",
     "immutable": "^3.8.2",

@@ -1,0 +1,287 @@
+* example application ch 6
+
+** declaritave codeing
+
+   Declarative, as opposed to imperative,
+   means that we will write expressions,
+   as opposed to step by step instructions.
+
+   *imperative*
+
+   the imperative loop must inst the arry, then eval the statment
+
+   #+BEGIN_SRC js :tangle no
+     const makes = []
+     for (let i = 0; i < cars.length; i++) {
+       makes.push(cars[i].make)
+     }
+   #+END_SRC
+
+   *declaritave*
+
+   the map verstion is one expression. no order of eval.
+   therefor its declaritave.
+
+   #+BEGIN_SRC js :tangle no
+     const makes = cars.map((car) => car.make)
+   #+END_SRC
+
+
+   *anoter example*
+
+   imperative
+
+   #+BEGIN_SRC js :tangle no
+     const authenticat = (form) => {
+       cosnt user = toUser(form)
+       return logIn(User)
+     }
+   #+END_SRC
+
+   declaritave
+   #+BEGIN_SRC js :tangle no
+     const authenticate = compose(logIn, toUser)
+   #+END_SRC
+
+   nothig is wrong with the imperative, tho there sill
+   an encoded step-by-step.
+
+   the compose exspretion simply states a fact:
+   Authentication is the composition of toUser and logIn.
+
+   - TODO understand this
+   Because we are not encoding order of evaluation,
+   declarative coding lends itself to parallel computing.
+   This coupled with pure functions is why FP is a good option
+   for the parallel future - we don't really need to do anything
+   special to achieve parallel/concurrent systems.
+
+** A flickr of functional programming; an exapmle app
+
+*** html skell
+    html skell
+    #+BEGIN_SRC html :tangle no
+     <!DOCTYPE html>
+     <html>
+       <head>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.11/require.min.js"></script>
+         <script src="flickr.js"></script>
+       </head>
+       <body></body>
+     </html>
+    #+END_SRC
+
+
+*** js begin
+**** the setup
+     js skell
+
+     #+BEGIN_SRC js :tangle yes
+     requirejs.config({
+       paths: {
+         ramda:
+         'https://cdnjs.cloudflare.com/ajax/'
+           + 'libs/ramda/0.13.0/ramda.min',
+         jquery:
+         'https://ajax.googleapis.com/ajax/'
+           + 'libs/jquery/2.1.1/jquery.min'
+       }
+     })
+
+     require(['ramda', 'jquery'], (_, $) => {
+       const trace = _.curry((tag, x) => {
+         console.log(tag, x)
+         return x
+       })
+     #+END_SRC
+
+     well use ramda, and requierjs for fun i guess
+
+     the app wil do 4 things
+     - things
+       1. construct a url for our particuler search term
+       2. make the flickr api call
+       3. transform the resulting json into an html img
+       4. place them on the screen
+
+     There are 2 impure actions mentioned above.
+     Do you see them? Those bits about getting data from the
+     flickr api and placing it on the screen.
+     Let's define those first so we can quarantine them.
+
+**** impure methods
+
+     #+BEGIN_SRC js :tangle yes
+     const Impure = {
+       getJSON: _.curry((callback, url) => {
+         $.getJSON(url, callback)
+       }),
+       setHTML: _.curry((sel, html) => {
+         $(sel).html(html)
+       })
+     }
+     #+END_SRC
+
+     here we wrap the jq methods to curry, swaping the args for
+     esyr acses.
+
+     #+BEGIN_SRC js :tangle yes
+     const url = (term) => {
+       return (
+         'https://api.flickr.com/services'
+           + '/feeds/photos_public.gne?tags='
+           + term + '&format=json&jsoncallback=?'
+       )
+     }
+     #+END_SRC
+
+**** the app func
+
+     now make the call to flickr
+     this will call our url func and pass to the getJ method
+
+     #+BEGIN_SRC js :tangle no
+       const app = _.compose(Impure.getJSON(trace('resp')), url)
+
+       app('cats')
+     #+END_SRC
+
+     just a prop exe to show whats happing
+
+     #+BEGIN_SRC js :tangle no
+       const prop = _.curry((property, object) => {
+         return object[property]
+       })
+     #+END_SRC
+
+     not so interesting
+
+     make a func to retrrev the data from json
+     and one to get the itams
+
+     get items, map to the mediaUrl func, which
+     gets the media object the the m place.
+
+     gets refacterd below
+     #+BEGIN_SRC js :tangle no
+       const mediaUrl = _.compose(_.prop('m'), _.prop('media'))
+
+       const srcs = _.compose(_.map(mediaUrl), _.prop('items))
+     #+END_SRC
+
+
+     gets changed
+     #+BEGIN_SRC js :tangle no
+       const renderImages = _.compose(Impure.setHtml('body'), srcs)
+
+       const app = _.compose(Impure.getJSON(renderImages), url)
+     #+END_SRC
+
+
+     make jq img elemts
+     #+BEGIN_SRC js :tangle yes
+       const img = (url) => {
+         return $('<img >', {
+           src: url
+         })
+       }
+     #+END_SRC
+
+     the image func simplyt maps the sources to the img func
+
+     renderImages will take srcs and set them to page with jq
+     in the Impure object.
+
+     app will call the url func with our tag, sending the url to the getJSON
+     func, in turn sending the results to the renderImages func
+
+
+     app will take an url, send it to our getJSON func, then
+     send to the renderImages func.
+
+     renderImages will get json, send it the images func, then
+     set the imgs to the body with our setHTML func
+
+     images will take a src string and add it to a jq img tag func
+
+     this will then call app and therefor the rest of the
+     application.
+
+     *gets refacterd below*
+     #+BEGIN_SRC js :tangle no
+       const images = _.compose(_.map(img), srcs)
+     #+END_SRC
+
+     #+BEGIN_SRC js :tangle yes
+       const renderImages = _.compose(Impure.setHtml('body'), images)
+       const app = _.compose(Impure.getJSON(renderImages), url)
+     #+END_SRC
+
+
+     the ending call and closing brackets
+     #+BEGIN_SRC js :tangle yes
+         app('cats')
+       })
+     #+END_SRC
+
+** a principled refactor
+   we map over each item to tunr it in to the media url
+   then we map again to tunr them in to tags
+
+*** a law regareding map and compose
+
+    #+BEGIN_SRC js :tangle no
+     const law = compose(map(f), map(g) == map(compose(f, g))
+    #+END_SRC
+
+***   the original code
+
+      #+BEGIN_SRC js :tangle no
+     const  mediaUrl = _.compose(_.prop('m'), _.prop('media'))
+
+     const  srcs = _.compose(_.map(mediaUrl), _.prop('items'))
+
+     const  images = _.compose(_.map(img), srcs)
+      #+END_SRC
+
+*** begin the refacter
+
+    line up the maps, thnaks to equatinol reasoning and purity
+    #+BEGIN_SRC js :tangle no
+     const mediaUrl = _.compose(_.prop('m'), _.prop('media'))
+
+     const images = _.compose(_.map(img), _.map(mediaUrl), _.prop('items'))
+    #+END_SRC
+
+    now that we have the maps lined up use composition law
+
+   1. compose a map
+      a. with another compose and _,prop('items')
+   2. the second compose
+      a. get a singel item from the firs map
+      and prop funcs.
+      b. it then sends it trough from mediaUrl to img, geting
+      the src string and adding it to the jq tag func.
+
+   #+BEGIN_SRC js :tangle no
+     const mediaUrl = _.compose(_.prop('m'), _.prop('media'))
+
+     const images = _.compose(
+       _.map(_.compose(img, mediaUrl)), _.prop('items'))
+   #+END_SRC
+
+
+*** the end result
+    the full rewrite looks like this
+
+    Now the bugger will only loop once while turning each item
+    into an img.  Let's just make it a little more readable by
+    extracting the function out.
+
+    #+BEGIN_SRC js :tangle yes
+     const mediaUrl = _.compose(_.prop('m'), _.prop('media'))
+
+     const mediaToImg = _.compose(img, mediaUrl)
+
+     const images = _.compose(_.map(mediaToImg), _.prop('items'))
+    #+END_SRC

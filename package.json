@@ -13,7 +13,8 @@
     "flow-bin": "^0.62.0",
     "immutable": "^3.8.2",
     "lodash": "^4.17.4",
-    "ramda": "^0.25.0"
+    "ramda": "^0.25.0",
+    "requirejs": "^2.3.5"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

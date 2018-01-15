@@ -166,15 +166,10 @@
      #+BEGIN_SRC js :tangle no
        const mediaUrl = _.compose(_.prop('m'), _.prop('media'))
 
-       const srcs = _.compose(_.map(mediaUrl), _.prop('items))
-     #+END_SRC
-
-
-     gets changed
-     #+BEGIN_SRC js :tangle no
+       const srcs = _.compose(_.map(mediaUrl), _.prop('items'))
        const renderImages = _.compose(Impure.setHtml('body'), srcs)
 
-       const app = _.compose(Impure.getJSON(renderImages), url)
+       // const app = _.compose(Impure.getJSON(renderImages), url)
      #+END_SRC
 
 
@@ -212,16 +207,9 @@
        const images = _.compose(_.map(img), srcs)
      #+END_SRC
 
-     #+BEGIN_SRC js :tangle yes
+     #+BEGIN_SRC js :tangle no
        const renderImages = _.compose(Impure.setHtml('body'), images)
        const app = _.compose(Impure.getJSON(renderImages), url)
-     #+END_SRC
-
-
-     the ending call and closing brackets
-     #+BEGIN_SRC js :tangle yes
-         app('cats')
-       })
      #+END_SRC
 
 ** a principled refactor
@@ -279,9 +267,19 @@
     extracting the function out.
 
     #+BEGIN_SRC js :tangle yes
-     const mediaUrl = _.compose(_.prop('m'), _.prop('media'))
+      const mediaUrl = _.compose(_.prop('m'), _.prop('media'))
 
-     const mediaToImg = _.compose(img, mediaUrl)
+      const mediaToImg = _.compose(img, mediaUrl)
 
-     const images = _.compose(_.map(mediaToImg), _.prop('items'))
+      const images = _.compose(_.map(mediaToImg), _.prop('items'))
+    #+END_SRC
+
+    the ending call and closing brackets
+    #+BEGIN_SRC js :tangle yes
+        const setImgs = _.compose(Impure.setHTML('body'), images)
+
+        const app = _.compose(Impure.getJSON(setImgs), url)
+
+        app('cats')
+      })
     #+END_SRC

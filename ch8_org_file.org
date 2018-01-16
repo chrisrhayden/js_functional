@@ -92,51 +92,89 @@
    container is basicly the id func from th eprevius chapter
    but well start to look at other funtors / contaier types
 
-cons Maybe = (x) => {
-  this.__value = x
-}
+   here is one now
 
-Maybe.of = function(x) {
-  return new Maybe(x)
-}
+   #+BEGIN_SRC js :tangle no
+     cons Maybe = (x) => {
+       this.__value = x
+     }
 
-Maybe.prototype.isNothing = () => {
-  return (this.__value === null || this.__value === undefined)
-}
+     Maybe.of = function(x) {
+       return new Maybe(x)
+     }
 
-// test os nothing, if true give nothing, else run the f func
-Maybe.prototype.map = (f) => {
-  return this.isNothing() ? Maybe.of(null) : Maybe.of(f(this.__value))
-}
+     Maybe.prototype.isNothing = () => {
+       return (this.__value === null || this.__value === undefined)
+     }
+   #+END_SRC
 
-Maybe.of('Malkovich Malkovich').map(match(/a/ig))
-// => Maybe(['a', 'a'])
+   test if nothing, if true give nothing, else run the f func
+   addiong the value to the maybe contaier
+   #+BEGIN_SRC js :tangle no
+     Maybe.prototype.map = (f) => {
+       return this.isNothing() ? Maybe.of(null) : Maybe.of(f(this.__value))
+     }
+   #+END_SRC
 
-Maybe.of(null).map(match(/a/ig))
-// => null
+   now use the functor
+   #+BEGIN_SRC js :tangle no
+     Maybe.of('Malkovich Malkovich').map(match(/a/ig))
+     // => Maybe(['a', 'a'])
 
-Maybe.of({
-  name: 'Boris'
-}).map(_.prop('age')).map(add(10))
-// Maybe(null)
+     Maybe.of(null).map(match(/a/ig))
+     // => null
 
-Maybe.of({
-  name: 'Dinah',
-  age: 14
-}).map(_.prop('age')).map(add(10))
-// => Maybe(24)
+     Maybe.of({
+       name: 'Boris'
+     }).map(_.prop('age')).map(add(10))
+     // Maybe(null)
 
-// point free
-// map :: Functor f => (a -> b) -> f a -> f b
-const map = curry((f, any_functor_at_all) => {
-  return any_functor_at_all.map(f)
-})
+     Maybe.of({
+       name: 'Dinah',
+       age: 14
+     }).map(_.prop('age')).map(add(10))
+     // => Maybe(24)
+   #+END_SRC
 
-/*
- * This is delightful as we can carry on with composition per usual and map will
- * work as expected. This is the case with ramda's map as well. We'll use dot
- * notation when it's instructive and the pointfree version when it's convenient.
- * Did you notice that? I've sneakily introduced extra notation into our type
- * signature. The Functor f => tells us that f must be a Functor. Not that
- * difficult, but I felt I should mention it.
- */
+   making it point free The Functor f => tells us that f must be a
+   Functor. Not that difficult, but I felt I should mention it.  we
+   can carry on with composition per usual and map will work as
+   expected.
+   #+BEGIN_SRC js :tangle yes
+     // map :: Functor f => (a -> b) -> f a -> f b
+     const map = curry((f, any_functor_at_all) => {
+       return any_functor_at_all.map(f)
+     })
+   #+END_SRC
+
+** Use cases
+   this is were the fun begins
+
+   we tipcly see maybe in funtions that might fail
+
+   #+BEGIN_SRC js :tangle no
+     const safeHead = (xs) => {
+       return Maybe.of(xs[0])
+     }
+
+     const streetName = compose(
+       map(_.prop('street')), safeHead, _.prop('addresses'))
+
+     streetName({
+       addresses: []
+     })
+
+     // Maybe(nill)
+
+     streetName({
+       addresses: [{
+         street: 'shady ln.',
+         number: 4201
+       }]
+     })
+     // maybe('shady ln')
+
+   #+END_SRC
+
+   #+BEGIN_SRC js :tangle no
+   #+END_SRC
